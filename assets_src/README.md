@@ -1,1 +1,1 @@
-# don't forget to list and add the licenses
+# this folder is for raw asset files only
