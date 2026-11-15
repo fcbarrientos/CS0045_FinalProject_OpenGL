@@ -1,7 +1,8 @@
 * Window and context: GLFW and GLAD, with OpenGL 3.3 core.
-* Rendering: draw textured quads with an orthographic camera. The hallway is a background image, and Plushtrap is a sprite. To fake depth, scale and move the sprite along a path as it gets closer.
-* Game state: a small state machine with WAITING → MOVING → ON_MARK / PAST_MARK → WIN / LOSE. Add a timer and a bit of randomness to his step timing.
-* Lighting and atmosphere: a fragment shader with a vignette, slight noise or flicker, and a darkness overlay.
+* Rendering: perspective camera, a depth buffer, and backface culling. The hallway is a simple box mesh (floor, walls, ceiling). The chair and the toy character are loaded models (Assimp). To approach the player, the character moves along a real path down the hallway, driven by a 0-1 progress value. No scaling tricks.
+* Game state: a small state machine with WAITING → MOVING → ON_MARK / PAST_MARK → WIN / LOSE. Add a timer and a bit of randomness to its step timing. The state machine is independent of the renderer.
+* Lighting and atmosphere: Blinn-Phong lighting with a dim ambient term, a flashlight-style spotlight, and a few point lights. Add distance fog. Then a post-process pass (fragment shader) for vignette, slight noise or flicker, and a darkness overlay. Shadow mapping is a stretch goal.
+* Scene and camera: fixed player position with slight head sway, plus an optional small look-around range. The scene holds the hallway, chair, character, floor mark, and lights.
 * Input: one key or mouse click for the action button.
-* Audio: miniaudio or OpenAL for footsteps, the music box, and the jumpscare.
-* Assets: make our own sprites and sounds, or use placeholders. The original FNAF assets are copyrighted.
+* Audio: miniaudio or OpenAL for footsteps, the music box, and the jumpscare. Optionally attach sounds to the character's 3D position so footsteps get louder as it approaches.
+* Assets: make our own models, textures, and sounds, or use placeholders (box hallway, capsule character, cube chair). The original FNAF assets are copyrighted, so the character is our own original design. Track the license of every downloaded asset.
