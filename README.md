@@ -3,110 +3,125 @@
 ### Separation of Tasks
 
 #### Person 1: Engine and rendering (lead)
-* GLFW/GLAD setup, the main loop, and delta time
-* Shader and texture loading (stb_image)
-* Perspective camera with head sway, depth testing, and culling setup
-* Mesh and model loading with Assimp, plus a Model::draw(shader, transform) function
-* Scene graph: a simple list of objects, each with a model and a transform
-* Project structure and build system (CMake), plus the repo setup
-* Final integration
+* freeglut + GLEW setup, callbacks, main loop, delta time
+* Camera: gluPerspective + gluLookAt, head sway applied as rotation
+* Simple OBJ loader and Mesh class that uploads to a VBO (glGenBuffers, glBufferData)
+* Texture loading (stb_image + glTexImage2D) and UVs on the hallway mesh
+* Scene list and draw order, applying glTranslatef / glRotatef / glScalef (chair and prop sizing)
+* Hallway mesh built as a subdivided grid
+* CMake rewrite (freeglut, GLEW, stb_image only), repo setup, final integration
+* Requirements: #1, #2 (callbacks), #3 (3D side), #4, #6, #7
 
 #### Person 2: Gameplay logic
-* State machine: WAITING → MOVING → ON_MARK / PAST_MARK → WIN / LOSE
-* Step timer and randomness, difficulty tuning, and the win and lose conditions
-* Input handling (button press, restart, quit)
-* The mark position along the hallway and the hit-detection window
-* Interface: getCharacterProgress() (0-1), getState(), and events onStep, onWin, onLose
-* Maps progress to a 3D position along the hallway path (a function progressToPosition())
+* State machine: WAITING -> MOVING -> ON_MARK / PAST_MARK -> WIN / LOSE
+* Step timer and randomness, difficulty tuning, hit window, mark position
+* Input class fed by the glutKeyboardFunc / glutMouseFunc callbacks: mouse = action, R = restart, ESC = quit
+* Interface: getState(), getCharacterProgress(), progressToPosition(), onStep, onWin, onLose
+* getMarkPulse(): a 0-1 value that Person 1 and 3 turn into scaling of the floor mark
+* Requirements: #2 (input hookup), #4 (scaling values)
 
-#### Person 3: Lighting, effects, and UI
-* Lit shader: Blinn-Phong, spotlight, point lights, and fog
-* Render-to-texture (framebuffer) with depth attachment, and the post-process shader: vignette, flicker, noise, and darkness overlay
-* Light behavior: flicker, flashlight sway, and lights reacting to game events
-* Jumpscare visuals: screen shake, flash, and a fast camera push toward the character
-* UI elements: win/lose screens and a debug overlay (text rendering with Dear ImGui or stb_easy_font)
-* Stretch goal: shadow mapping
-* Needs a stub from Person 1 (a framebuffer, a fullscreen quad, and a basic model draw) early on
+#### Person 3: Lighting, effects, 2D UI
+* Lighting: glLightfv spotlight (GL_SPOT_CUTOFF), point lights with attenuation, ambient, glFog
+* Light behavior: flicker, flashlight sway, step dip, blackout
+* 2D layer: glOrtho setup, HUD text (glutBitmapCharacter), win/lose screens, mark indicator
+* Overlays: vignette quads, flash, and camera jitter
+* Jumpscare: timing and logic, plus the lunge scaling (glScalef)
+* Dropped: shaders, framebuffer, shadow mapping, ImGui
+* Requirements: #3 (2D side), #4 (jumpscare scaling), #5
 
-#### Person 4: Audio and original 3D assets
-* Audio system with miniaudio or OpenAL: playSound(), looping, volume, and optional 3D positional audio
-* Original sound effects: footsteps, a music-box-style loop, ambient hum, and the jumpscare sting
-* Original models in Blender: the toy character (low-poly, with a pose swap or two for the steps), the chair, and the hallway details (door frames, baseboards)
-* Textures for all models, exported as .glb or .obj with clear scale and origin
-* Placeholder assets in the first hour (box, capsule, cube), so everyone else can start
-* Asset folder conventions and a license log
+#### Person 4: Audio and original assets
+* Audio (bonus): miniaudio, playSound(), looping, volume
+* Sounds: footsteps, music-box loop, ambient hum, jumpscare sting
+* Original models in Blender: character, chair, hallway details
+* Export as .obj + .mtl with textures (not .glb), with clear scale and origin
+* Textures: wallpaper, floor, character, chair, mark
+* Placeholders in the first hour, license log, asset naming conventions
+* Requirements: #1, #6 (assets)
 
-## Directory format
+#### Things needed to agree on
+1. Folder structure and naming.
+2. Interface headers written before anyone codes behind them.
+3. Coordinates: right-handed, Y up, meters, hallway along -Z.
+4. OBJ export rules (scale, origin, triangulated, .mtl paths).
+5. Git workflow: one branch per person, small pull requests, Person 1 merges.
+6. Get answers to the professor questions as early as possible.
+
+#### Timeline
+* Phase 1 (setup): P1 gets a window with a lit, textured, rotating cube drawn from a VBO. P2 builds the state machine as a console prototype. P3 tests the spotlight, fog, and a glOrtho text overlay on test geometry. P4 delivers placeholder assets and sounds.
+* Phase 2 (integration): connect game state to the character transform, add lighting and overlays, trigger audio from events.
+* Phase 3 (polish): swap in final assets, tune timing and lighting, use scaling for the jumpscare, pulse, and props, and fix bugs.
+
+#### Requirements checklist (from the professor's brief)
+- [ ] 1. At least 3 primitives/objects (P1, P4)
+- [ ] 2. GLUT keyboard and mouse callbacks (P1, P2)
+- [ ] 3. 2D and 3D elements (P1, P3)
+- [ ] 4. Translation, rotation, scaling (P1, P2, P3)
+- [ ] 5. Lighting (P3)
+- [ ] 6. Image texture (P1, P4)
+- [ ] 7. VBO for at least one object (P1)## Directory format
+
+### Directory format
+
 ```text
-CS0045_FinalProject_OpenGL/
-├── CMakeLists.txt
+project-name/
+├── CMakeLists.txt           # freeglut, GLEW, stb_image (+ miniaudio)
 ├── README.md
+├── ARCHITECTURE.md
 ├── LICENSES.md              # credits and licenses for every third-party asset
 ├── .gitignore
 │
-├── external/                # third-party libraries (vendored or submodules)
-│   ├── glfw/
-│   ├── glad/
-│   ├── glm/
+├── external/
+│   ├── freeglut/
+│   ├── glew/
 │   ├── stb/                 # stb_image.h
-│   ├── assimp/              # model loading
-│   ├── miniaudio/
-│   └── imgui/               # optional: debug UI and text
+│   ├── glm/                 # optional: vector math only
+│   └── miniaudio/           # bonus
 │
 ├── src/
-│   ├── main.cpp             # entry point: creates the window, runs the loop
+│   ├── main.cpp             # entry point: init, register callbacks, glutMainLoop()
 │   ├── Config.h             # tunable constants (step timing, flicker, fog, FOV)
 │   │
 │   ├── engine/              # Person 1
-│   │   ├── Window.h/.cpp
-│   │   ├── Shader.h/.cpp
-│   │   ├── Texture.h/.cpp
-│   │   ├── Camera.h/.cpp        # perspective camera and head sway
-│   │   ├── Mesh.h/.cpp
-│   │   ├── Model.h/.cpp         # Assimp loading and drawing
-│   │   ├── Scene.h/.cpp         # objects, transforms, and draw order
-│   │   └── Time.h/.cpp
+│   │   ├── Window.h/.cpp        # only file that includes GLUT; callback wiring
+│   │   ├── Time.h/.cpp          # wraps glutGet(GLUT_ELAPSED_TIME)
+│   │   ├── Camera.h/.cpp        # gluPerspective, gluLookAt, head sway
+│   │   ├── Texture.h/.cpp       # stb_image + glTexImage2D
+│   │   ├── ObjLoader.h/.cpp     # simple .obj/.mtl loader
+│   │   ├── Mesh.h/.cpp          # VBO upload and draw
+│   │   ├── HallwayBuilder.h/.cpp  # subdivided hallway grid with UVs
+│   │   └── Scene.h/.cpp         # objects, transforms (translate/rotate/scale), draw order
 │   │
-│   ├── game/                # Person 2
+│   ├── game/                # Person 2 (no GLUT or GL includes)
 │   │   ├── GameState.h/.cpp     # state machine
 │   │   ├── Character.h/.cpp     # progress, step logic, progressToPosition()
-│   │   ├── Input.h/.cpp
+│   │   ├── Input.h/.cpp         # key/mouse state fed by GLUT callbacks
 │   │   └── Events.h             # onStep, onWin, onLose
 │   │
 │   ├── effects/             # Person 3
-│   │   ├── Light.h              # directional, point, and spot light structs
-│   │   ├── LightingSystem.h/.cpp
-│   │   ├── Framebuffer.h/.cpp
-│   │   ├── PostProcess.h/.cpp
-│   │   ├── Jumpscare.h/.cpp
-│   │   ├── ShadowMap.h/.cpp     # stretch goal
-│   │   └── UI.h/.cpp            # win/lose screens and debug overlay
+│   │   ├── Lighting.h/.cpp      # glLight spotlight, point lights, glFog
+│   │   ├── LightBehavior.h/.cpp # flicker, flashlight sway, step dip, blackout
+│   │   ├── Overlay2D.h/.cpp     # glOrtho layer: vignette, flash, screens
+│   │   ├── Text.h/.cpp          # glutBitmapCharacter helper
+│   │   ├── Jumpscare.h/.cpp     # timing, lunge scaling, camera jitter
+│   │   └── UI.h/.cpp            # HUD, mark indicator, win/lose screens
 │   │
-│   └── audio/               # Person 4
-│       ├── AudioSystem.h/.cpp   # includes optional 3D positional audio
+│   └── audio/               # Person 4 (bonus)
+│       ├── AudioSystem.h/.cpp
 │       └── Sounds.h             # sound IDs and file paths
 │
-├── shaders/
-│   ├── lit.vert
-│   ├── lit.frag             # Blinn-Phong, spotlight, point lights, fog
-│   ├── shadow_depth.vert    # stretch goal
-│   ├── shadow_depth.frag    # stretch goal
-│   ├── postprocess.vert
-│   └── postprocess.frag     # vignette, noise, flicker, darkness
-│
 ├── assets/
-│   ├── models/
+│   ├── models/              # .obj + .mtl
 │   │   ├── hallway/
 │   │   ├── character/
 │   │   └── props/           # chair, mark
 │   ├── textures/
-│   │   ├── hallway/
+│   │   ├── hallway/         # wallpaper, floor
 │   │   ├── character/
 │   │   ├── props/
 │   │   └── ui/
 │   ├── audio/
-│   │   ├── sfx/             # footsteps, jumpscare sting
-│   │   ├── music/           # music box loop
+│   │   ├── sfx/
+│   │   ├── music/
 │   │   └── ambient/
 │   └── placeholders/        # box hallway, capsule character, cube chair, temp sounds
 │
@@ -115,7 +130,8 @@ CS0045_FinalProject_OpenGL/
 ├── docs/
 │   ├── interfaces.md        # agreed function signatures and coordinate conventions
 │   ├── design.md            # character concept, game rules, tuning notes
-│   ├── asset_pipeline.md    # model export rules, naming, scale, origin
+│   ├── asset_pipeline.md    # OBJ export rules, naming, scale, origin
+│   ├── professor_questions.md  # open questions and answers
 │   └── workflow.md          # git rules, naming and style conventions
 │
 └── tests/                   # optional: unit tests for the state machine
