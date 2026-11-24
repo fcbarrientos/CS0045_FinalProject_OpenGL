@@ -1,1 +1,0 @@
-# this folder is for raw asset files only
