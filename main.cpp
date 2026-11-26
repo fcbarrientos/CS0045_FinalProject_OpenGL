@@ -87,7 +87,7 @@ void drawChair(float x, float z) {               // prop: GLUT cubes, translated
 // lunge 0->1 drives the jumpscare leap; walk is the gait phase in radians;
 // weakened = the player is locked on in the green zone.
 void drawFoxy(float z, float s, float lunge, float walk, bool weakened) {
-    static bool traced = false;                 // TODO: temporary, remove once confirmed
+    static bool traced = false;
     if (!traced) { fprintf(stderr, "Foxy scare fired\n"); traced = true; }
 
     const float open = 6.f + 46.f * lunge;      // jaw angle, degrees
@@ -656,7 +656,7 @@ void startAmbience() {
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(winW, winH); glutCreateWindow("Ghost Ward - 60s Survival");
+    glutInitWindowSize(winW, winH); glutCreateWindow("Foxy Minigame Survival");
     if (glewInit() != GLEW_OK) { fprintf(stderr, "GLEW init failed\n"); return 1; }
     srand(1234 + (unsigned)glutGet(GLUT_ELAPSED_TIME));
 
